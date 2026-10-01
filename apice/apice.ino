@@ -6,12 +6,12 @@
 #include <ArduinoJson.h>
 
 // Credenciais da rede Wi-Fi
-const char* ssid = "NOME_DA_TUA_REDE_WIFI";
-const char* password = "SENHA_DA_TUA_REDE_WIFI";
+const char* ssid = "WI-FI-ADM";
+const char* password = "Ac8ce0ss3@Admin";
 
 // Endereço da API Java (Substituir pelo IP local do teu computador onde o Spring Boot está a correr)
 // Exemplo: http://192.168.1.100:8080/api/saltos
-const String apiUrl = "http://SEU_IP_LOCAL:8080/api/saltos";
+const String apiUrl = "http://10.116.67.105:8080/api/saltos";
 
 // ID da sessão previamente criada na API (Muda conforme o que estiver na base de dados)
 const int idSessaoAtual = 1; 
