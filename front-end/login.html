@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101310">
+    <meta name="description" content="Acesse a plataforma Ápice para acompanhar o desempenho dos atletas.">
+    <title>Entrar — Ápice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="assets/js/login.js" defer></script>
+  </head>
+  <body>
+    <main class="login-page">
+      <section class="login-story" aria-label="Sobre a plataforma Ápice">
+        <a class="brand" href="index.html" aria-label="Ápice"><span class="brand-mark" aria-hidden="true">A</span><span class="brand-copy"><strong>ÁPICE</strong><small>PERFORMANCE LAB</small></span></a>
+        <div class="login-story-copy">
+          <p class="eyebrow">DESEMPENHO EM MOVIMENTO</p>
+          <h1>Seu time.<br>Sempre no <span>ápice.</span></h1>
+          <p>Acompanhe seus atletas, organize treinos e veja a evolução de cada salto em um só lugar.</p>
+          <div class="login-highlights"><span>Perfis dos atletas</span><span>Sessões de treino</span><span>Dados da ESP32</span></div>
+        </div>
+        <div class="login-footer">ÁPICE · PERFORMANCE LAB</div>
+      </section>
+      <section class="login-panel">
+        <div class="login-card">
+          <a class="brand login-mobile-brand" href="index.html" aria-label="Ápice"><span class="brand-mark" aria-hidden="true">A</span><span class="brand-copy"><strong>ÁPICE</strong><small>PERFORMANCE LAB</small></span></a>
+          <p class="eyebrow">ÁREA DO TREINADOR</p>
+          <h2>Bem-vindo de volta</h2>
+          <p class="login-description">Entre com seu usuário e senha para acessar os atletas e acompanhar os treinos.</p>
+          <form id="login-form" class="login-form">
+            <div class="field"><label for="username">Usuário</label><input id="username" name="username" type="text" autocomplete="username" required autofocus></div>
+            <div class="field"><label for="password">Senha</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
+            <button id="login-submit" class="button primary" type="submit">Entrar</button>
+          </form>
+          <div id="login-message" class="login-message" role="alert" aria-live="assertive"></div>
+          <p class="login-help">Não consegue entrar? Peça ajuda ao responsável pelo sistema.</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101310">
+    <meta name="description" content="Captações do sensor ESP32 na plataforma Ápice.">
+    <title>Captações — Ápice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <script src="../assets/js/app.js" defer></script>
+  </head>
+  <body data-page="captacoes">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="../index.html" aria-label="Ápice, página inicial"><span class="brand-mark" aria-hidden="true">A</span><span class="brand-copy"><strong>ÁPICE</strong><small>PERFORMANCE LAB</small></span></a>
+        <div class="nav-caption">PLATAFORMA</div>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a class="nav-link" href="../index.html" data-view="inicio"><span class="nav-icon">▦</span>Visão geral</a>
+          <a class="nav-link" href="atletas.html" data-view="atletas"><span class="nav-icon">♙</span>Atletas<span class="nav-count" id="nav-athlete-count">0</span></a>
+          <a class="nav-link" href="sessoes.html" data-view="sessoes"><span class="nav-icon">◷</span>Sessões</a>
+          <a class="nav-link active" href="captacoes.html" data-view="captacoes"><span class="nav-icon">⌁</span>Captações<span class="nav-live-dot"></span></a>
+        </nav>
+        <div class="sidebar-bottom"><div class="device-card"><div class="device-card-top"><span class="device-icon">⌁</span><span id="device-indicator" class="status-dot"></span></div><strong>ESP32 · MPU6050</strong><span id="device-status">Aguardando conexão</span><span class="field-hint">Conexão automática ativa</span></div><div class="sidebar-foot"><span>ÁPICE</span><span>v1.0</span></div></div>
+      </aside>
+      <main class="main-area"><header class="topbar"><div class="breadcrumbs"><span>ÁPICE</span><span class="crumb-separator">/</span><strong id="current-section">Captações</strong></div><div class="topbar-actions"><span class="sync-label"><span class="status-dot" id="sync-dot"></span><span id="sync-text">Conectando à API</span></span><button class="icon-button" data-action="refresh" aria-label="Atualizar dados" title="Atualizar dados">↻</button><button class="button small ghost" data-action="logout">Sair</button></div></header><div id="notice-region" class="notice-region" aria-live="polite"></div><section id="page-content" class="page-content" aria-live="polite"></section></main>
+    </div>
+    <dialog id="modal" class="modal"><form id="modal-form" method="dialog"><div id="modal-content"></div></form></dialog>
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>
