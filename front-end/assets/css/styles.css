@@ -132,6 +132,9 @@ th { padding: 11px 14px; color: #778171; border-bottom: 1px solid #303730; font-
 td { padding: 12px 14px; color: #d8ded1; border-bottom: 1px solid #282e28; font-size: 10px; vertical-align: middle; }
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: #1b201b; }
+tbody tr[data-session-id], tbody tr[data-profile-athlete-id] { cursor: pointer; }
+.session-row-link, .athlete-row-link { color: inherit; text-decoration: none; }
+.session-row-link:hover, .athlete-row-link:hover { color: var(--lime); }
 .table-name { display: flex; align-items: center; gap: 9px; min-width: 155px; }
 .table-avatar { display: grid; width: 27px; height: 27px; flex: 0 0 27px; place-items: center; border-radius: 50%; color: #d5eca6; background: #36452c; font-size: 9px; font-weight: 700; }
 .table-secondary { margin-top: 3px; color: var(--muted); font-size: 9px; }
@@ -153,6 +156,11 @@ tbody tr:hover { background: #1b201b; }
 .profile-fact span { color: var(--muted); font-size: 9px; }
 .profile-fact strong { font-size: 11px; font-weight: 600; }
 .profile-metrics { margin-top: 13px; }
+.session-notes { margin-bottom: 14px; }
+.session-notes .panel-body { color: #d8ded1; font-size: 11px; }
+.session-notes .panel-body strong { display: block; margin-bottom: 6px; font-size: 10px; }
+.session-notes .panel-body p { margin: 0; color: var(--muted); line-height: 1.6; white-space: pre-wrap; }
+.session-chart-panel { margin-top: 14px; }
 .modal { width: min(500px, calc(100vw - 28px)); max-width: none; max-height: min(90vh, 760px); padding: 0; overflow: auto; color: var(--text); border: 1px solid #394238; border-radius: 12px; background: #171c17; box-shadow: 0 24px 80px #000a; }
 .modal::backdrop { background: #070a07bb; backdrop-filter: blur(4px); }
 .modal form { margin: 0; }

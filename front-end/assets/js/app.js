@@ -11,6 +11,7 @@ const state = {
   captures: [],
   view: document.body.dataset.page || "inicio",
   selectedAthleteId: new URLSearchParams(window.location.search).get("id"),
+  selectedSessionId: new URLSearchParams(window.location.search).get("id"),
   athleteSearch: "",
   captureSessionFilter: "all",
   lastUpdated: null,
@@ -29,6 +30,7 @@ const sectionNames = {
   sessoes: "Sessões",
   captacoes: "Captações",
   atleta: "Perfil do atleta",
+  sessao: "Análise da sessão",
 };
 
 function escapeHtml(value) {
@@ -214,6 +216,13 @@ function athleteSessions(id) {
   });
 }
 
+function sessionCaptures(id) {
+  return sortCaptures(state.captures.filter((capture) => {
+    const sessionId = capture.sessao?.id ?? capture.sessaoId;
+    return String(sessionId) === String(id);
+  }));
+}
+
 function getAverageHeight(captures) {
   const heights = captures.map((capture) => numeric(capture.alturaEstimadaCm)).filter((height) => height > 0);
   return heights.length ? heights.reduce((total, height) => total + height, 0) / heights.length : 0;
@@ -250,12 +259,14 @@ function render() {
   document.querySelector("#current-section").textContent = sectionNames[state.view];
   document.querySelector("#nav-athlete-count").textContent = state.athletes.length;
   document.querySelectorAll(".nav-link").forEach((link) => {
-    link.classList.toggle("active", link.dataset.view === (state.view === "atleta" ? "atletas" : state.view));
+    const activeView = state.view === "atleta" ? "atletas" : state.view === "sessao" ? "sessoes" : state.view;
+    link.classList.toggle("active", link.dataset.view === activeView);
   });
 
   if (state.view === "inicio") page.innerHTML = renderDashboard();
   else if (state.view === "atletas") page.innerHTML = renderAthletes();
   else if (state.view === "atleta") page.innerHTML = renderAthleteProfile();
+  else if (state.view === "sessao") page.innerHTML = renderSessionDashboard();
   else if (state.view === "sessoes") page.innerHTML = renderSessions();
   else page.innerHTML = renderCaptures();
 }
@@ -333,7 +344,7 @@ function renderAthletes() {
   const rows = filtered.map((athlete) => {
     const sessions = athleteSessions(athlete.id).length;
     const jumps = athleteCaptures(athlete.id);
-    return `<tr><td><div class="table-name"><span class="table-avatar">${escapeHtml(initials(athlete.nome))}</span><span><strong>${escapeHtml(athlete.nome)}</strong><span class="table-secondary">ID ${escapeHtml(athlete.id)}</span></span></div></td><td>${formatDate(athlete.dataNascimento)}</td><td>${escapeHtml(athlete.alturaCm ?? "—")} cm</td><td>${escapeHtml(athlete.pesoKg ?? "—")} kg</td><td>${sessions}</td><td>${jumps.length}</td><td><div class="table-actions"><a class="button small ghost" href="${pageHref("atleta")}?id=${encodeURIComponent(athlete.id)}">Perfil</a>${button("edit-athlete", "Editar", "button small ghost", `data-id="${escapeHtml(athlete.id)}"`)}${button("delete-athlete", "Excluir", "button small danger", `data-id="${escapeHtml(athlete.id)}"`)}</div></td></tr>`;
+    return `<tr data-profile-athlete-id="${escapeHtml(athlete.id)}"><td><div class="table-name"><span class="table-avatar">${escapeHtml(initials(athlete.nome))}</span><span><a class="athlete-row-link" href="${pageHref("atleta")}?id=${encodeURIComponent(athlete.id)}"><strong>${escapeHtml(athlete.nome)}</strong></a><span class="table-secondary">ID ${escapeHtml(athlete.id)}</span></span></div></td><td>${formatDate(athlete.dataNascimento)}</td><td>${escapeHtml(athlete.alturaCm ?? "—")} cm</td><td>${escapeHtml(athlete.pesoKg ?? "—")} kg</td><td>${sessions}</td><td>${jumps.length}</td><td><div class="table-actions"><a class="button small ghost" href="${pageHref("atleta")}?id=${encodeURIComponent(athlete.id)}">Perfil</a>${button("edit-athlete", "Editar", "button small ghost", `data-id="${escapeHtml(athlete.id)}"`)}${button("delete-athlete", "Excluir", "button small danger", `data-id="${escapeHtml(athlete.id)}"`)}</div></td></tr>`;
   }).join("");
   return `${sectionHeader("ELENCO", "Atletas", "Gerencie os perfis e acompanhe os indicadores individuais.", actions)}
     <section class="panel">${filtered.length ? `<div class="table-wrap"><table><thead><tr><th>Atleta</th><th>Nascimento</th><th>Altura</th><th>Peso</th><th>Sessões</th><th>Saltos</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyState(state.athletes.length ? "Nenhum resultado" : "Nenhum atleta cadastrado", state.athletes.length ? "Tente outro nome na busca." : "Cadastre atletas para começar a acompanhar o desempenho.", state.athletes.length ? "" : "Cadastrar atleta", state.athletes.length ? "" : "new-athlete")}</section>`;
@@ -346,9 +357,9 @@ function renderAthleteProfile() {
     return `${sectionHeader("PERFIL DO ATLETA", "Atleta não encontrado", "Este perfil não está disponível ou o atleta foi removido.", button("navigate", "Voltar para atletas", "button ghost", `data-view="atletas"`))}`;
   }
   const captures = sortCaptures(athleteCaptures(athlete.id));
-  const sessions = athleteSessions(athlete.id);
+  const sessions = athleteSessions(athlete.id).sort((left, right) => new Date(right.dataHoraInicio) - new Date(left.dataHoraInicio));
   const average = getAverageHeight(captures);
-  const sessionRows = sessions.map((session) => `<tr><td>#${escapeHtml(session.id)}</td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : "Em andamento"}</td><td>${captures.filter((capture) => String(capture.sessao?.id ?? capture.sessaoId) === String(session.id)).length}</td><td>${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}</td></tr>`).join("");
+  const sessionRows = sessions.map((session) => `<tr class="session-row" data-session-id="${escapeHtml(session.id)}"><td><a class="session-row-link" href="${pageHref("sessao")}?id=${encodeURIComponent(session.id)}"><strong>#${escapeHtml(session.id)}</strong></a></td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : "Em andamento"}</td><td>${sessionCaptures(session.id).length}</td><td>${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}</td></tr>`).join("");
   const captureRows = captures.slice(0, 8).map(renderCaptureRow).join("");
   const actions = `${button("edit-athlete", "Editar perfil", "button ghost", `data-id="${escapeHtml(athlete.id)}"`)}${button("new-session", "+ Nova sessão", "button primary", `data-athlete-id="${escapeHtml(athlete.id)}"`)}`;
   return `${sectionHeader("PERFIL DO ATLETA", athlete.nome, "Histórico individual de sessões e dados captados pelo sensor.", actions)}
@@ -363,11 +374,39 @@ function renderAthleteProfile() {
 function renderSessions() {
   const rows = [...state.sessions].sort((a, b) => new Date(b.dataHoraInicio) - new Date(a.dataHoraInicio)).map((session) => {
     const athlete = session.atleta || athleteById(session.atletaId);
-    const jumps = state.captures.filter((capture) => String(capture.sessao?.id ?? capture.sessaoId) === String(session.id)).length;
-    return `<tr><td><strong>#${escapeHtml(session.id)}</strong></td><td>${escapeHtml(athlete?.nome || "Atleta não identificado")}</td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : `<span class="state-badge"><i class="status-dot"></i>Em andamento</span>`}</td><td>${jumps}</td><td>${escapeHtml(session.observacoes || "—")}</td><td><div class="table-actions">${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}${button("delete-session", "Excluir", "button small danger", `data-id="${escapeHtml(session.id)}"`)}</div></td></tr>`;
+    const jumps = sessionCaptures(session.id).length;
+    return `<tr class="session-row" data-session-id="${escapeHtml(session.id)}"><td><a class="session-row-link" href="${pageHref("sessao")}?id=${encodeURIComponent(session.id)}"><strong>#${escapeHtml(session.id)}</strong></a></td><td>${escapeHtml(athlete?.nome || "Atleta não identificado")}</td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : `<span class="state-badge"><i class="status-dot"></i>Em andamento</span>`}</td><td>${jumps}</td><td>${escapeHtml(session.observacoes || "—")}</td><td><div class="table-actions">${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}${button("delete-session", "Excluir", "button small danger", `data-id="${escapeHtml(session.id)}"`)}</div></td></tr>`;
   }).join("");
   return `${sectionHeader("ROTINA DE TREINO", "Sessões", "Crie e organize os treinos usados para agrupar captações.", button("new-session", "+ Nova sessão", "button primary"))}
     <section class="panel">${state.sessions.length ? `<div class="table-wrap"><table><thead><tr><th>ID</th><th>Atleta</th><th>Início</th><th>Fim</th><th>Saltos</th><th>Observações</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyState("Nenhuma sessão cadastrada", "Crie uma sessão para começar a associar os dados do sensor.", "Criar sessão", "new-session")}</section>`;
+}
+
+function renderSessionDashboard() {
+  const session = sessionById(state.selectedSessionId);
+  if (!session) {
+    if (state.loading) return `<div class="loading">Carregando análise da sessão...</div>`;
+    return sectionHeader("ANÁLISE DA SESSÃO", "Sessão não encontrada", "Esta sessão não está disponível ou foi removida.", button("navigate", "Voltar para sessões", "button ghost", `data-view="sessoes"`));
+  }
+  const athlete = session.atleta || athleteById(session.atletaId);
+  const captures = sessionCaptures(session.id);
+  const averageFlight = captures.length
+    ? captures.reduce((total, capture) => total + numeric(capture.tempoVooMs), 0) / captures.length
+    : 0;
+  const actions = `${athlete ? `<a class="button ghost" href="${pageHref("atleta")}?id=${encodeURIComponent(athlete.id)}">Voltar ao atleta</a>` : ""}${button("edit-session", "Editar sessão", "button ghost", `data-id="${escapeHtml(session.id)}"`)}`;
+  return `${sectionHeader("DASHBOARD DA SESSÃO", `Sessão #${session.id}`, `${athlete?.nome ? `${athlete.nome} · ` : ""}${formatDate(session.dataHoraInicio, true)}${session.dataHoraFim ? ` até ${formatDate(session.dataHoraFim, true)}` : " · Em andamento"}`, actions)}
+    ${session.observacoes ? `<section class="panel session-notes"><div class="panel-body"><strong>Observações</strong><p>${escapeHtml(session.observacoes)}</p></div></section>` : ""}
+    <div class="metrics-grid">
+      ${metricCard("Captações", captures.length, "saltos", "Registros desta sessão", "⌁")}
+      ${metricCard("Altura média", formatNumber(getAverageHeight(captures)), "cm", "Média das alturas estimadas", "∿")}
+      ${metricCard("Melhor salto", formatNumber(getBestHeight(captures)), "cm", "Maior altura estimada", "↗")}
+      ${metricCard("Tempo de voo médio", formatNumber(averageFlight, 0), "ms", "Duração média dos saltos", "◷")}
+    </div>
+    <section class="panel session-chart-panel"><div class="panel-header"><div><h2 class="panel-title">Evolução dos saltos</h2><p class="panel-subtitle">Altura estimada por captação · cm</p></div><span class="capture-badge"><i class="status-dot"></i>${captures.length} registros</span></div>
+      <div class="chart-summary"><strong>${formatNumber(getAverageHeight(captures))} cm</strong><span>média da sessão</span></div>
+      <div class="chart-wrap">${renderChart(captures.slice().reverse())}</div>
+    </section>
+    <div class="section-row"><h2>Histórico de captações</h2><span class="capture-badge">${captures.length} registros</span></div>
+    <section class="panel">${captures.length ? `<div class="table-wrap"><table><thead><tr><th>Data e hora</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração de pico Z</th></tr></thead><tbody>${captures.map((capture) => `<tr><td>${formatDate(captureTimestamp(capture), true)}</td><td>${formatNumber(capture.tempoVooMs, 0)} ms</td><td><strong>${formatNumber(capture.alturaEstimadaCm)} cm</strong></td><td>${formatNumber(capture.aceleracaoPicoZ, 2)} m/s²</td></tr>`).join("")}</tbody></table></div>` : emptyState("Sem captações nesta sessão", "Os dados enviados pelo sensor durante este treino aparecerão aqui.")}</section>`;
 }
 
 function renderCaptureRow(capture) {
@@ -494,6 +533,16 @@ document.addEventListener("click", (event) => {
   const link = event.target.closest("[data-view-link]");
   if (link) {
     window.location.href = pageHref(link.dataset.viewLink);
+    return;
+  }
+  const sessionRow = event.target.closest("tr[data-session-id]");
+  if (sessionRow && !event.target.closest("button, a, input, select, textarea")) {
+    window.location.href = `${pageHref("sessao")}?id=${encodeURIComponent(sessionRow.dataset.sessionId)}`;
+    return;
+  }
+  const athleteRow = event.target.closest("tr[data-profile-athlete-id]");
+  if (athleteRow && !event.target.closest("button, a, input, select, textarea")) {
+    window.location.href = `${pageHref("atleta")}?id=${encodeURIComponent(athleteRow.dataset.profileAthleteId)}`;
     return;
   }
   const actionButton = event.target.closest("[data-action]");

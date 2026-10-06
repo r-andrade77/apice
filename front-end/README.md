@@ -14,6 +14,7 @@ front-end/
     ├── atletas.html       # listagem e CRUD de atletas
     ├── atleta.html        # perfil individual (?id=ID)
     ├── sessoes.html       # listagem e CRUD de sessões
+    ├── sessao.html        # dashboard e captações da sessão (?id=ID)
     └── captacoes.html     # captações e indicadores
 ```
 
@@ -36,7 +37,7 @@ O frontend consome as rotas existentes:
 
 O acesso começa em `login.html`, que valida as credenciais HTTP Basic na rota existente de atletas. As sessões e captações seguem as permissões já definidas no backend. O dashboard deriva seus indicadores e gráfico das respostas reais; a listagem de captações é atualizada a cada 15 segundos.
 
-Cada área tem seu próprio arquivo HTML dentro de `pages/`. Cada perfil de atleta abre `pages/atleta.html?id={id}`; os cartões e o botão **Perfil** levam à página do atleta, e o endereço pode ser aberto ou recarregado diretamente.
+Cada área tem seu próprio arquivo HTML dentro de `pages/`. Cada perfil de atleta abre `pages/atleta.html?id={id}`; os cartões e o botão **Perfil** levam à página do atleta, e o endereço pode ser aberto ou recarregado diretamente. As sessões podem ser abertas pelo perfil do atleta ou pela listagem geral e levam a `pages/sessao.html?id={id}`, com o dashboard e o histórico de captações daquela sessão.
 
 Para treinadores sem experiência técnica, a aplicação conecta automaticamente ao endereço padrão e mostra avisos simples em caso de falha. Em uma instalação para vários treinadores, uma evolução recomendada é substituir a autenticação Basic por contas individuais com recuperação de senha e sessão segura gerenciada pelo backend.
 
