@@ -3,6 +3,42 @@
 const API_DEFAULT = "http://localhost:8080";
 const POLL_INTERVAL_MS = 15000;
 const AUTH_STORAGE_KEY = "apice.auth";
+const THEME_STORAGE_KEY = "apice.theme";
+
+// Tema claro/escuro
+function initTheme() {
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDarkMode = savedTheme ? savedTheme === "dark" : prefersDark;
+  
+  if (isDarkMode) {
+    document.documentElement.classList.remove("light-mode");
+  } else {
+    document.documentElement.classList.add("light-mode");
+  }
+  updateThemeButton();
+}
+
+function toggleTheme() {
+  const isDarkMode = !document.documentElement.classList.contains("light-mode");
+  if (isDarkMode) {
+    document.documentElement.classList.add("light-mode");
+    localStorage.setItem(THEME_STORAGE_KEY, "light");
+  } else {
+    document.documentElement.classList.remove("light-mode");
+    localStorage.setItem(THEME_STORAGE_KEY, "dark");
+  }
+  updateThemeButton();
+}
+
+function updateThemeButton() {
+  const btn = document.querySelector("#theme-toggle");
+  if (btn) {
+    const isDarkMode = !document.documentElement.classList.contains("light-mode");
+    btn.textContent = isDarkMode ? "☀️" : "🌙";
+  }
+}
+
 const state = {
   apiUrl: API_DEFAULT,
   authToken: sessionStorage.getItem(AUTH_STORAGE_KEY) || "",
@@ -359,9 +395,9 @@ function renderAthleteProfile() {
   const captures = sortCaptures(athleteCaptures(athlete.id));
   const sessions = athleteSessions(athlete.id).sort((left, right) => new Date(right.dataHoraInicio) - new Date(left.dataHoraInicio));
   const average = getAverageHeight(captures);
-  const sessionRows = sessions.map((session) => `<tr class="session-row" data-session-id="${escapeHtml(session.id)}"><td><a class="session-row-link" href="${pageHref("sessao")}?id=${encodeURIComponent(session.id)}"><strong>#${escapeHtml(session.id)}</strong></a></td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : "Em andamento"}</td><td>${sessionCaptures(session.id).length}</td><td>${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}</td></tr>`).join("");
+  const sessionRows = sessions.map((session) => `<tr class="session-row" data-session-id="${escapeHtml(session.id)}"><td><a class="session-row-link" href="${pageHref("sessao")}?id=${encodeURIComponent(session.id)}"><strong>#${escapeHtml(session.id)}</strong></a></td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : "Em andamento"}</td><td>${sessionCaptures(session.id).length}</td><td><div class="table-actions">${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}${!session.dataHoraFim ? button("end-session", "Encerrar", "button small ghost", `data-id="${escapeHtml(session.id)}"`) : ""}${button("delete-session", "Excluir", "button small danger", `data-id="${escapeHtml(session.id)}"`)}</div></td></tr>`).join("");
   const captureRows = captures.slice(0, 8).map(renderCaptureRow).join("");
-  const actions = `${button("edit-athlete", "Editar perfil", "button ghost", `data-id="${escapeHtml(athlete.id)}"`)}${button("new-session", "+ Nova sessão", "button primary", `data-athlete-id="${escapeHtml(athlete.id)}"`)}`;
+  const actions = `${button("edit-athlete", "Editar perfil", "button ghost", `data-id="${escapeHtml(athlete.id)}"`)}${button("new-session", "+ Nova sessão", "button primary", `data-athlete-id="${escapeHtml(athlete.id)}"`) }${button("delete-athlete", "Excluir atleta", "button danger", `data-id="${escapeHtml(athlete.id)}"`) }`;
   return `${sectionHeader("PERFIL DO ATLETA", athlete.nome, "Histórico individual de sessões e dados captados pelo sensor.", actions)}
     <section class="profile-hero"><span class="athlete-avatar">${escapeHtml(initials(athlete.nome))}</span><div class="profile-info"><h2>${escapeHtml(athlete.nome)}</h2><p>Nascimento ${formatDate(athlete.dataNascimento)} · Atleta #${escapeHtml(athlete.id)}</p></div><div class="profile-facts"><div class="profile-fact"><span>Altura</span><strong>${escapeHtml(athlete.alturaCm ?? "—")} cm</strong></div><div class="profile-fact"><span>Peso</span><strong>${escapeHtml(athlete.pesoKg ?? "—")} kg</strong></div></div></section>
     <div class="metrics-grid profile-metrics">${metricCard("Sessões", sessions.length, "sessões", "Treinos registrados", "◷")}${metricCard("Saltos captados", captures.length, "saltos", "Dados enviados pelo ESP32", "⌁")}${metricCard("Melhor marca", formatNumber(getBestHeight(captures)), "cm", "Maior altura estimada", "↗")}${metricCard("Média de altura", formatNumber(average), "cm", "Média das captações", "∿")}</div>
@@ -375,7 +411,7 @@ function renderSessions() {
   const rows = [...state.sessions].sort((a, b) => new Date(b.dataHoraInicio) - new Date(a.dataHoraInicio)).map((session) => {
     const athlete = session.atleta || athleteById(session.atletaId);
     const jumps = sessionCaptures(session.id).length;
-    return `<tr class="session-row" data-session-id="${escapeHtml(session.id)}"><td><a class="session-row-link" href="${pageHref("sessao")}?id=${encodeURIComponent(session.id)}"><strong>#${escapeHtml(session.id)}</strong></a></td><td>${escapeHtml(athlete?.nome || "Atleta não identificado")}</td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : `<span class="state-badge"><i class="status-dot"></i>Em andamento</span>`}</td><td>${jumps}</td><td>${escapeHtml(session.observacoes || "—")}</td><td><div class="table-actions">${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}${button("delete-session", "Excluir", "button small danger", `data-id="${escapeHtml(session.id)}"`)}</div></td></tr>`;
+    return `<tr class="session-row" data-session-id="${escapeHtml(session.id)}"><td><a class="session-row-link" href="${pageHref("sessao")}?id=${encodeURIComponent(session.id)}"><strong>#${escapeHtml(session.id)}</strong></a></td><td>${escapeHtml(athlete?.nome || "Atleta não identificado")}</td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : `<span class="state-badge"><i class="status-dot"></i>Em andamento</span>`}</td><td>${jumps}</td><td>${escapeHtml(session.observacoes || "—")}</td><td><div class="table-actions">${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}${!session.dataHoraFim ? button("end-session", "Encerrar", "button small ghost", `data-id="${escapeHtml(session.id)}"`) : ""}${button("delete-session", "Excluir", "button small danger", `data-id="${escapeHtml(session.id)}"`)}</div></td></tr>`;
   }).join("");
   return `${sectionHeader("ROTINA DE TREINO", "Sessões", "Crie e organize os treinos usados para agrupar captações.", button("new-session", "+ Nova sessão", "button primary"))}
     <section class="panel">${state.sessions.length ? `<div class="table-wrap"><table><thead><tr><th>ID</th><th>Atleta</th><th>Início</th><th>Fim</th><th>Saltos</th><th>Observações</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyState("Nenhuma sessão cadastrada", "Crie uma sessão para começar a associar os dados do sensor.", "Criar sessão", "new-session")}</section>`;
@@ -392,7 +428,7 @@ function renderSessionDashboard() {
   const averageFlight = captures.length
     ? captures.reduce((total, capture) => total + numeric(capture.tempoVooMs), 0) / captures.length
     : 0;
-  const actions = `${athlete ? `<a class="button ghost" href="${pageHref("atleta")}?id=${encodeURIComponent(athlete.id)}">Voltar ao atleta</a>` : ""}${button("edit-session", "Editar sessão", "button ghost", `data-id="${escapeHtml(session.id)}"`)}`;
+  const actions = `${athlete ? `<a class="button ghost" href="${pageHref("atleta")}?id=${encodeURIComponent(athlete.id)}">Voltar ao atleta</a>` : ""}${button("edit-session", "Editar sessão", "button ghost", `data-id="${escapeHtml(session.id)}"`)}${!session.dataHoraFim ? button("end-session", "Encerrar sessão", "button primary", `data-id="${escapeHtml(session.id)}"`) : ""}`;
   return `${sectionHeader("DASHBOARD DA SESSÃO", `Sessão #${session.id}`, `${athlete?.nome ? `${athlete.nome} · ` : ""}${formatDate(session.dataHoraInicio, true)}${session.dataHoraFim ? ` até ${formatDate(session.dataHoraFim, true)}` : " · Em andamento"}`, actions)}
     ${session.observacoes ? `<section class="panel session-notes"><div class="panel-body"><strong>Observações</strong><p>${escapeHtml(session.observacoes)}</p></div></section>` : ""}
     <div class="metrics-grid">
@@ -524,6 +560,36 @@ async function confirmDelete(kind, record) {
   }, { danger: true });
 }
 
+async function endSession(sessionId) {
+  const session = sessionById(sessionId);
+  if (!session) {
+    toast("Sessão não encontrada.", true);
+    return;
+  }
+  if (session.dataHoraFim) {
+    toast("Esta sessão já foi encerrada.", true);
+    return;
+  }
+  const fields = `<div class="field full"><p class="page-description">Você está prestes a encerrar a <strong>sessão #${escapeHtml(session.id)}</strong>. O ESP32 deixará de registrar dados para esta sessão.</p></div>`;
+  openModal("Encerrar sessão?", "Confirme a ação antes de continuar.", fields, "Encerrar sessão", async () => {
+    const now = new Date();
+    const pad = (value) => String(value).padStart(2, "0");
+    const dataHoraFim = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    
+    await apiRequest(`/api/sessoes/${session.id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        atletaId: session.atleta?.id ?? session.atletaId,
+        dataHoraInicio: session.dataHoraInicio,
+        dataHoraFim: dataHoraFim,
+        observacoes: session.observacoes || "",
+      }),
+    });
+    await loadData({ silent: true });
+    toast("Sessão encerrada com sucesso. O ESP32 parou de registrar dados.");
+  }, { danger: false });
+}
+
 document.addEventListener("click", (event) => {
   const viewButton = event.target.closest("[data-view]");
   if (viewButton) {
@@ -572,8 +638,12 @@ document.addEventListener("click", (event) => {
   } else if (actionButton.dataset.action === "delete-session") {
     const session = sessionById(id);
     if (session) confirmDelete("sessao", session);
+  } else if (actionButton.dataset.action === "end-session") {
+    endSession(id);
   }
 });
+
+document.querySelector("#theme-toggle")?.addEventListener("click", toggleTheme);
 
 document.addEventListener("input", (event) => {
   if (event.target.id === "athlete-search") {
@@ -604,6 +674,7 @@ if (!state.authToken) {
     : `pages/${state.view === "atleta" ? "atleta" : state.view}.html${window.location.search}`;
   window.location.replace(`${loginPath}?returnTo=${encodeURIComponent(returnTo)}`);
 } else {
+  initTheme();
   render();
   loadData({ silent: true });
   window.setInterval(() => {
