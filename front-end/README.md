@@ -42,3 +42,13 @@ Cada área tem seu próprio arquivo HTML dentro de `pages/`. Cada perfil de atle
 Para treinadores sem experiência técnica, a aplicação conecta automaticamente ao endereço padrão e mostra avisos simples em caso de falha. Em uma instalação para vários treinadores, uma evolução recomendada é substituir a autenticação Basic por contas individuais com recuperação de senha e sessão segura gerenciada pelo backend.
 
 Para que os dados da ESP32 apareçam, crie a sessão na API, configure o firmware com o ID dessa sessão e mantenha a API acessível pela rede usada pelo dispositivo.
+
+## Temas
+
+O botão de sol/lua alterna entre os modos claro e escuro no login e em todas as telas internas. A preferência é salva no navegador; sem uma escolha salva, a interface acompanha o tema do sistema. O controle também pode ser acionado pelo teclado.
+
+O comportamento fica em [assets/js/theme.js](assets/js/theme.js), carregado antes dos estilos para aplicar a preferência antes da primeira renderização. Os ícones locais são do [Lucide](https://lucide.dev/), com a licença preservada em [assets/icons/LICENSE](assets/icons/LICENSE).
+
+## Imagem do login
+
+A [fotografia do atleta em salto](assets/images/treino-volei.jpg) é de [Daniil Kondrashin, no Pexels](https://www.pexels.com/photo/32681170/), utilizada conforme a [licença Pexels](https://www.pexels.com/license/). O arquivo é armazenado localmente.

@@ -260,7 +260,10 @@ function render() {
   document.querySelector("#nav-athlete-count").textContent = state.athletes.length;
   document.querySelectorAll(".nav-link").forEach((link) => {
     const activeView = state.view === "atleta" ? "atletas" : state.view === "sessao" ? "sessoes" : state.view;
-    link.classList.toggle("active", link.dataset.view === activeView);
+    const active = link.dataset.view === activeView;
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", link.dataset.view === state.view ? "page" : "location");
+    else link.removeAttribute("aria-current");
   });
 
   if (state.view === "inicio") page.innerHTML = renderDashboard();
@@ -347,7 +350,7 @@ function renderAthletes() {
     return `<tr data-profile-athlete-id="${escapeHtml(athlete.id)}"><td><div class="table-name"><span class="table-avatar">${escapeHtml(initials(athlete.nome))}</span><span><a class="athlete-row-link" href="${pageHref("atleta")}?id=${encodeURIComponent(athlete.id)}"><strong>${escapeHtml(athlete.nome)}</strong></a><span class="table-secondary">ID ${escapeHtml(athlete.id)}</span></span></div></td><td>${formatDate(athlete.dataNascimento)}</td><td>${escapeHtml(athlete.alturaCm ?? "—")} cm</td><td>${escapeHtml(athlete.pesoKg ?? "—")} kg</td><td>${sessions}</td><td>${jumps.length}</td><td><div class="table-actions"><a class="button small ghost" href="${pageHref("atleta")}?id=${encodeURIComponent(athlete.id)}">Perfil</a>${button("edit-athlete", "Editar", "button small ghost", `data-id="${escapeHtml(athlete.id)}"`)}${button("delete-athlete", "Excluir", "button small danger", `data-id="${escapeHtml(athlete.id)}"`)}</div></td></tr>`;
   }).join("");
   return `${sectionHeader("ELENCO", "Atletas", "Gerencie os perfis e acompanhe os indicadores individuais.", actions)}
-    <section class="panel">${filtered.length ? `<div class="table-wrap"><table><thead><tr><th>Atleta</th><th>Nascimento</th><th>Altura</th><th>Peso</th><th>Sessões</th><th>Saltos</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyState(state.athletes.length ? "Nenhum resultado" : "Nenhum atleta cadastrado", state.athletes.length ? "Tente outro nome na busca." : "Cadastre atletas para começar a acompanhar o desempenho.", state.athletes.length ? "" : "Cadastrar atleta", state.athletes.length ? "" : "new-athlete")}</section>`;
+    <section class="panel">${filtered.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Atletas"><table><thead><tr><th>Atleta</th><th>Nascimento</th><th>Altura</th><th>Peso</th><th>Sessões</th><th>Saltos</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyState(state.athletes.length ? "Nenhum resultado" : "Nenhum atleta cadastrado", state.athletes.length ? "Tente outro nome na busca." : "Cadastre atletas para começar a acompanhar o desempenho.", state.athletes.length ? "" : "Cadastrar atleta", state.athletes.length ? "" : "new-athlete")}</section>`;
 }
 
 function renderAthleteProfile() {
@@ -366,9 +369,9 @@ function renderAthleteProfile() {
     <section class="profile-hero"><span class="athlete-avatar">${escapeHtml(initials(athlete.nome))}</span><div class="profile-info"><h2>${escapeHtml(athlete.nome)}</h2><p>Nascimento ${formatDate(athlete.dataNascimento)} · Atleta #${escapeHtml(athlete.id)}</p></div><div class="profile-facts"><div class="profile-fact"><span>Altura</span><strong>${escapeHtml(athlete.alturaCm ?? "—")} cm</strong></div><div class="profile-fact"><span>Peso</span><strong>${escapeHtml(athlete.pesoKg ?? "—")} kg</strong></div></div></section>
     <div class="metrics-grid profile-metrics">${metricCard("Sessões", sessions.length, "sessões", "Treinos registrados", "◷")}${metricCard("Saltos captados", captures.length, "saltos", "Dados enviados pelo ESP32", "⌁")}${metricCard("Melhor marca", formatNumber(getBestHeight(captures)), "cm", "Maior altura estimada", "↗")}${metricCard("Média de altura", formatNumber(average), "cm", "Média das captações", "∿")}</div>
     <div class="section-row"><h2>Sessões do atleta</h2>${button("new-session", "+ Nova sessão", "button small ghost", `data-athlete-id="${escapeHtml(athlete.id)}"`)}</div>
-    <section class="panel">${sessions.length ? `<div class="table-wrap"><table><thead><tr><th>Sessão</th><th>Início</th><th>Fim</th><th>Saltos</th><th>Ações</th></tr></thead><tbody>${sessionRows}</tbody></table></div>` : emptyState("Sem sessões registradas", "Crie uma sessão para vincular captações a este atleta.", "Criar sessão", "new-session")}</section>
+    <section class="panel">${sessions.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Sessões do atleta"><table><thead><tr><th>Sessão</th><th>Início</th><th>Fim</th><th>Saltos</th><th>Ações</th></tr></thead><tbody>${sessionRows}</tbody></table></div>` : emptyState("Sem sessões registradas", "Crie uma sessão para vincular captações a este atleta.", "Criar sessão", "new-session")}</section>
     <div class="section-row"><h2>Captações recentes</h2><a href="${pageHref("captacoes")}" data-view-link="captacoes">Ver todas ↗</a></div>
-    <section class="panel">${captures.length ? `<div class="table-wrap"><table><thead><tr><th>Data e hora</th><th>Sessão</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração Z</th></tr></thead><tbody>${captureRows}</tbody></table></div>` : emptyState("Nenhum dado captado", "As leituras do sensor serão exibidas após o envio pela API.")}</section>`;
+    <section class="panel">${captures.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Captações recentes"><table><thead><tr><th>Data e hora</th><th>Sessão</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração Z</th></tr></thead><tbody>${captureRows}</tbody></table></div>` : emptyState("Nenhum dado captado", "As leituras do sensor serão exibidas após o envio pela API.")}</section>`;
 }
 
 function renderSessions() {
@@ -378,7 +381,7 @@ function renderSessions() {
     return `<tr class="session-row" data-session-id="${escapeHtml(session.id)}"><td><a class="session-row-link" href="${pageHref("sessao")}?id=${encodeURIComponent(session.id)}"><strong>#${escapeHtml(session.id)}</strong></a></td><td>${escapeHtml(athlete?.nome || "Atleta não identificado")}</td><td>${formatDate(session.dataHoraInicio, true)}</td><td>${session.dataHoraFim ? formatDate(session.dataHoraFim, true) : `<span class="state-badge"><i class="status-dot"></i>Em andamento</span>`}</td><td>${jumps}</td><td>${escapeHtml(session.observacoes || "—")}</td><td><div class="table-actions">${button("edit-session", "Editar", "button small ghost", `data-id="${escapeHtml(session.id)}"`)}${button("delete-session", "Excluir", "button small danger", `data-id="${escapeHtml(session.id)}"`)}</div></td></tr>`;
   }).join("");
   return `${sectionHeader("ROTINA DE TREINO", "Sessões", "Crie e organize os treinos usados para agrupar captações.", button("new-session", "+ Nova sessão", "button primary"))}
-    <section class="panel">${state.sessions.length ? `<div class="table-wrap"><table><thead><tr><th>ID</th><th>Atleta</th><th>Início</th><th>Fim</th><th>Saltos</th><th>Observações</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyState("Nenhuma sessão cadastrada", "Crie uma sessão para começar a associar os dados do sensor.", "Criar sessão", "new-session")}</section>`;
+    <section class="panel">${state.sessions.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Sessões"><table><thead><tr><th>ID</th><th>Atleta</th><th>Início</th><th>Fim</th><th>Saltos</th><th>Observações</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyState("Nenhuma sessão cadastrada", "Crie uma sessão para começar a associar os dados do sensor.", "Criar sessão", "new-session")}</section>`;
 }
 
 function renderSessionDashboard() {
@@ -406,7 +409,7 @@ function renderSessionDashboard() {
       <div class="chart-wrap">${renderChart(captures.slice().reverse())}</div>
     </section>
     <div class="section-row"><h2>Histórico de captações</h2><span class="capture-badge">${captures.length} registros</span></div>
-    <section class="panel">${captures.length ? `<div class="table-wrap"><table><thead><tr><th>Data e hora</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração de pico Z</th></tr></thead><tbody>${captures.map((capture) => `<tr><td>${formatDate(captureTimestamp(capture), true)}</td><td>${formatNumber(capture.tempoVooMs, 0)} ms</td><td><strong>${formatNumber(capture.alturaEstimadaCm)} cm</strong></td><td>${formatNumber(capture.aceleracaoPicoZ, 2)} m/s²</td></tr>`).join("")}</tbody></table></div>` : emptyState("Sem captações nesta sessão", "Os dados enviados pelo sensor durante este treino aparecerão aqui.")}</section>`;
+    <section class="panel">${captures.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Histórico de captações"><table><thead><tr><th>Data e hora</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração de pico Z</th></tr></thead><tbody>${captures.map((capture) => `<tr><td>${formatDate(captureTimestamp(capture), true)}</td><td>${formatNumber(capture.tempoVooMs, 0)} ms</td><td><strong>${formatNumber(capture.alturaEstimadaCm)} cm</strong></td><td>${formatNumber(capture.aceleracaoPicoZ, 2)} m/s²</td></tr>`).join("")}</tbody></table></div>` : emptyState("Sem captações nesta sessão", "Os dados enviados pelo sensor durante este treino aparecerão aqui.")}</section>`;
 }
 
 function renderCaptureRow(capture) {
@@ -422,12 +425,14 @@ function renderCaptures() {
   return `${sectionHeader("DADOS DO SENSOR", "Captações", "Leituras enviadas pela ESP32 e armazenadas pela API.", `<select class="select-input" id="capture-session-filter" aria-label="Filtrar por sessão">${options}</select>${button("refresh", "↻ Atualizar", "button ghost")}`)}
     <div class="metrics-grid">${metricCard("Total de registros", filtered.length, "captações", selected === "all" ? "Todas as sessões" : `Sessão #${selected}`, "⌁")}${metricCard("Altura média", formatNumber(getAverageHeight(filtered)), "cm", "Estimativa de altura por tempo de voo", "∿")}${metricCard("Maior altura", formatNumber(getBestHeight(filtered)), "cm", "Melhor marca entre as captações", "↗")}${metricCard("Tempo de voo médio", formatNumber(filtered.length ? filtered.reduce((sum, capture) => sum + numeric(capture.tempoVooMs), 0) / filtered.length : 0, 0), "ms", "Duração média do voo", "◷")}</div>
     <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Registros recebidos</h2><p class="panel-subtitle">Atualização automática a cada 15 segundos</p></div><span class="capture-badge"><i class="status-dot"></i>ESP32</span></div>
-      ${filtered.length ? `<div class="table-wrap"><table><thead><tr><th>Data e hora</th><th>Atleta</th><th>Sessão</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração de pico Z</th></tr></thead><tbody>${filtered.map(renderCaptureRow).join("")}</tbody></table></div>` : emptyState("Nenhuma captação encontrada", selected === "all" ? "Quando a ESP32 enviar dados para /api/saltos, os registros aparecerão aqui." : "Não há captações associadas a esta sessão.")}
+      ${filtered.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Registros recebidos"><table><thead><tr><th>Data e hora</th><th>Atleta</th><th>Sessão</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração de pico Z</th></tr></thead><tbody>${filtered.map(renderCaptureRow).join("")}</tbody></table></div>` : emptyState("Nenhuma captação encontrada", selected === "all" ? "Quando a ESP32 enviar dados para /api/saltos, os registros aparecerão aqui." : "Não há captações associadas a esta sessão.")}
     </section>`;
 }
 
 function openModal(title, description, fields, submitLabel, onSubmit, { danger = false } = {}) {
-  modalContent.innerHTML = `<div class="modal-head"><div><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></div><button class="modal-close" type="button" data-action="close-modal" aria-label="Fechar">×</button></div><div class="modal-fields">${fields}</div><div class="modal-actions"><button class="button ghost" type="button" data-action="close-modal">Cancelar</button><button class="button ${danger ? "danger" : "primary"}" type="submit">${escapeHtml(submitLabel)}</button></div>`;
+  modal.setAttribute("aria-labelledby", "modal-heading");
+  modal.setAttribute("aria-describedby", "modal-description");
+  modalContent.innerHTML = `<div class="modal-head"><div><h2 id="modal-heading">${escapeHtml(title)}</h2><p id="modal-description">${escapeHtml(description)}</p></div><button class="modal-close" type="button" data-action="close-modal" aria-label="Fechar">×</button></div><div class="modal-fields">${fields}</div><div class="modal-actions"><button class="button ghost" type="button" data-action="close-modal">Cancelar</button><button class="button ${danger ? "danger" : "primary"}" type="submit">${escapeHtml(submitLabel)}</button></div>`;
   modalForm.onsubmit = async (event) => {
     event.preventDefault();
     const submitButton = modalForm.querySelector('button[type="submit"]');
