@@ -19,8 +19,6 @@
   function applyTheme() {
     const theme = preference || (systemTheme.matches ? "dark" : "light");
     const dark = theme === "dark";
-    const changed = root.dataset.theme && root.dataset.theme !== theme;
-    if (changed) root.classList.add("theme-changing");
     root.dataset.theme = theme;
 
     document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
@@ -30,11 +28,6 @@
 
     document.querySelector('meta[name="theme-color"]')
       ?.setAttribute("content", dark ? "#101310" : "#f5f6f2");
-
-    if (changed) {
-      root.getBoundingClientRect();
-      window.setTimeout(() => root.classList.remove("theme-changing"), 0);
-    }
   }
 
   function initializeControl() {
