@@ -1,6 +1,6 @@
 # Ápice — frontend
 
-Interface web multipágina para acompanhar atletas, sessões e saltos recebidos pela API Spring Boot do projeto.
+Interface web multipágina para acompanhar atletas, sessões e saltos recebidos pela plataforma do projeto.
 
 ## Organização
 
@@ -9,7 +9,7 @@ front-end/
 ├── index.html             # página inicial
 ├── assets/
 │   ├── css/styles.css     # estilos compartilhados
-│   └── js/app.js          # integração com a API e interações
+│   └── js/app.js          # integração com a plataforma e interações
 └── pages/
     ├── atletas.html       # listagem e CRUD de atletas
     ├── atleta.html        # perfil individual (?id=ID)
@@ -20,10 +20,10 @@ front-end/
 
 ## Executar
 
-1. Inicie a API e o banco de dados conforme as instruções do projeto.
+1. Inicie a plataforma e o banco de dados conforme as instruções do projeto.
 2. Sirva esta pasta por HTTP, por exemplo com a extensão **Live Server** do VS Code ou `python -m http.server 5500`.
-3. Abra o endereço apresentado pelo servidor. No primeiro acesso, a interface tenta conectar à API em `http://localhost:8080`.
-4. Abra `login.html` e entre com o usuário e a senha fornecidos pelo administrador da API. A conexão é automática com `http://localhost:8080`; a autenticação fica ativa apenas até fechar a aba.
+3. Abra o endereço apresentado pelo servidor. No primeiro acesso, a interface tenta conectar ao Ápice em `http://localhost:8080`.
+4. Abra `login.html` e entre com o usuário e a senha fornecidos pelo administrador do sistema. A conexão é automática com `http://localhost:8080`; a autenticação fica ativa apenas até fechar a aba.
 
 Não é necessário instalar dependências: a interface usa HTML, CSS e JavaScript nativos.
 
@@ -41,7 +41,7 @@ Cada área tem seu próprio arquivo HTML dentro de `pages/`. Cada perfil de atle
 
 Para treinadores sem experiência técnica, a aplicação conecta automaticamente ao endereço padrão e mostra avisos simples em caso de falha. Em uma instalação para vários treinadores, uma evolução recomendada é substituir a autenticação Basic por contas individuais com recuperação de senha e sessão segura gerenciada pelo backend.
 
-Para que os dados da ESP32 apareçam, crie a sessão na API, configure o firmware com o ID dessa sessão e mantenha a API acessível pela rede usada pelo dispositivo.
+Para que os dados do sensor apareçam, crie a sessão na plataforma, configure o dispositivo com o ID dessa sessão e mantenha o Ápice acessível pela rede usada.
 
 ## Temas
 

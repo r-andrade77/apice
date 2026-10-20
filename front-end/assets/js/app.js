@@ -80,6 +80,41 @@ function clearNotice() {
   noticeRegion.replaceChildren();
 }
 
+function showLoadingScreen() {
+  const shell = document.querySelector(".app-shell");
+  const screen = document.createElement("div");
+  screen.className = "loading-screen";
+  screen.setAttribute("role", "status");
+  screen.setAttribute("aria-live", "polite");
+  screen.innerHTML = `<div class="loading-screen-content">
+    <span class="brand-mark loading-brand" aria-hidden="true">A</span>
+    <strong class="loading-wordmark">ÁPICE</strong>
+    <span class="loading-tagline">DESEMPENHO EM MOVIMENTO</span>
+    <svg class="loading-trajectory" viewBox="0 0 320 100" aria-hidden="true">
+      <path class="loading-baseline" d="M16 84 H304" />
+      <path class="loading-arc-track" d="M32 84 Q160 -44 288 84" />
+      <path class="loading-arc" pathLength="1" d="M32 84 Q160 -44 288 84" />
+      <circle class="loading-apex" cx="160" cy="20" r="5" />
+    </svg>
+    <p class="loading-heading">Preparando seu próximo salto.</p>
+    <span class="loading-caption">Carregando seus dados<span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+  </div>`;
+  const wasInert = shell.inert;
+  shell.inert = true;
+  shell.setAttribute("aria-busy", "true");
+  document.body.classList.add("is-loading");
+  document.body.append(screen);
+
+  return () => {
+    shell.inert = wasInert;
+    shell.removeAttribute("aria-busy");
+    document.body.classList.remove("is-loading");
+    screen.classList.add("is-leaving");
+    screen.addEventListener("transitionend", () => screen.remove(), { once: true });
+    window.setTimeout(() => screen.remove(), 400);
+  };
+}
+
 function normalizeApiUrl() {
   return state.apiUrl.trim().replace(/\/+$/, "");
 }
@@ -92,7 +127,7 @@ async function apiRequest(path, options = {}) {
 
   let response;
   try {
-    response = await fetch(`${normalizeApiUrl()}${path}`, { ...options, headers });
+    response = await fetch(`${normalizeApiUrl()}${path}`, { ...options, headers, signal: options.signal || AbortSignal.timeout(15000) });
   } catch {
     throw new Error("Não foi possível conectar ao sistema. Verifique sua conexão ou tente novamente em instantes.");
   }
@@ -115,7 +150,7 @@ async function apiRequest(path, options = {}) {
 }
 
 function apiErrorMessage(error) {
-  return error instanceof Error ? error.message : "Ocorreu um erro inesperado ao acessar a API.";
+  return error instanceof Error ? error.message : "Ocorreu um erro inesperado ao acessar o Ápice.";
 }
 
 async function loadData({ silent = false } = {}) {
@@ -170,8 +205,8 @@ function updateConnectionIndicator(online) {
   liveIndicator.classList.toggle("live", online);
   syncText.textContent = online
     ? `Sincronizado às ${state.lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
-    : "API indisponível";
-  deviceStatus.textContent = online ? "API conectada · dados ao vivo" : "Verifique a conexão da API";
+    : "Ápice indisponível";
+  deviceStatus.textContent = online ? "Ápice conectado · dados ao vivo" : "Verifique a conexão com o Ápice";
 }
 
 function captureTimestamp(capture) {
@@ -280,11 +315,11 @@ function renderDashboard() {
   const best = getBestHeight(state.captures);
   const actions = `${button("new-session", "+ Nova sessão", "button primary")}${button("new-athlete", "+ Atleta", "button ghost")}`;
   const athletes = state.athletes.slice(0, 3);
-  return `${sectionHeader("CENTRO DE PERFORMANCE", "Desempenho em movimento.", "Acompanhe os indicadores e a evolução captados pelo sensor ESP32.", actions)}
+  return `${sectionHeader("CENTRO DE PERFORMANCE", "Desempenho em movimento.", "Acompanhe os indicadores e a evolução captados pelo sensor.", actions)}
     <div class="metrics-grid">
       ${metricCard("Atletas ativos", state.athletes.length, "atletas", "Perfis cadastrados na plataforma", "♙")}
       ${metricCard("Sessões registradas", state.sessions.length, "sessões", "Treinos disponíveis para análise", "◷")}
-      ${metricCard("Saltos captados", state.captures.length, "registros", "Leituras recebidas pela API", "⌁")}
+      ${metricCard("Saltos captados", state.captures.length, "registros", "Leituras recebidas na plataforma", "⌁")}
       ${metricCard("Maior salto", formatNumber(best), "cm", `Média geral de ${formatNumber(average)} cm`, "↗")}
     </div>
     <div class="dashboard-grid">
@@ -292,8 +327,8 @@ function renderDashboard() {
         <div class="chart-summary"><strong>${formatNumber(average)} cm</strong><span>média de altura</span></div>
         <div class="chart-wrap">${renderChart(sortCaptures().slice(0, 12).reverse())}</div>
       </section>
-      <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Atividade recente</h2><p class="panel-subtitle">Últimas leituras enviadas pelo ESP32</p></div><a class="inline-link" href="${pageHref("captacoes")}">Ver todas ↗</a></div>
-        <div class="panel-body">${recent.length ? `<div class="recent-list">${recent.map(renderRecentCapture).join("")}</div>` : emptyState("Sem captações ainda", "As leituras recebidas do ESP32 aparecerão aqui.")}</div>
+      <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Atividade recente</h2><p class="panel-subtitle">Últimas leituras enviadas pelo sensor</p></div><a class="inline-link" href="${pageHref("captacoes")}">Ver todas ↗</a></div>
+        <div class="panel-body">${recent.length ? `<div class="recent-list">${recent.map(renderRecentCapture).join("")}</div>` : emptyState("Sem captações ainda", "As leituras recebidas do sensor aparecerão aqui.")}</div>
       </section>
     </div>
     <div class="section-row"><h2>Atletas</h2><a href="${pageHref("atletas")}">Ver todos ↗</a></div>
@@ -367,11 +402,11 @@ function renderAthleteProfile() {
   const actions = `${button("edit-athlete", "Editar perfil", "button ghost", `data-id="${escapeHtml(athlete.id)}"`)}${button("new-session", "+ Nova sessão", "button primary", `data-athlete-id="${escapeHtml(athlete.id)}"`)}`;
   return `${sectionHeader("PERFIL DO ATLETA", athlete.nome, "Histórico individual de sessões e dados captados pelo sensor.", actions)}
     <section class="profile-hero"><span class="athlete-avatar">${escapeHtml(initials(athlete.nome))}</span><div class="profile-info"><h2>${escapeHtml(athlete.nome)}</h2><p>Nascimento ${formatDate(athlete.dataNascimento)} · Atleta #${escapeHtml(athlete.id)}</p></div><div class="profile-facts"><div class="profile-fact"><span>Altura</span><strong>${escapeHtml(athlete.alturaCm ?? "—")} cm</strong></div><div class="profile-fact"><span>Peso</span><strong>${escapeHtml(athlete.pesoKg ?? "—")} kg</strong></div></div></section>
-    <div class="metrics-grid profile-metrics">${metricCard("Sessões", sessions.length, "sessões", "Treinos registrados", "◷")}${metricCard("Saltos captados", captures.length, "saltos", "Dados enviados pelo ESP32", "⌁")}${metricCard("Melhor marca", formatNumber(getBestHeight(captures)), "cm", "Maior altura estimada", "↗")}${metricCard("Média de altura", formatNumber(average), "cm", "Média das captações", "∿")}</div>
+    <div class="metrics-grid profile-metrics">${metricCard("Sessões", sessions.length, "sessões", "Treinos registrados", "◷")}${metricCard("Saltos captados", captures.length, "saltos", "Dados enviados pelo sensor", "⌁")}${metricCard("Melhor marca", formatNumber(getBestHeight(captures)), "cm", "Maior altura estimada", "↗")}${metricCard("Média de altura", formatNumber(average), "cm", "Média das captações", "∿")}</div>
     <div class="section-row"><h2>Sessões do atleta</h2>${button("new-session", "+ Nova sessão", "button small ghost", `data-athlete-id="${escapeHtml(athlete.id)}"`)}</div>
     <section class="panel">${sessions.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Sessões do atleta"><table><thead><tr><th>Sessão</th><th>Início</th><th>Fim</th><th>Saltos</th><th>Ações</th></tr></thead><tbody>${sessionRows}</tbody></table></div>` : emptyState("Sem sessões registradas", "Crie uma sessão para vincular captações a este atleta.", "Criar sessão", "new-session")}</section>
     <div class="section-row"><h2>Captações recentes</h2><a href="${pageHref("captacoes")}" data-view-link="captacoes">Ver todas ↗</a></div>
-    <section class="panel">${captures.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Captações recentes"><table><thead><tr><th>Data e hora</th><th>Sessão</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração Z</th></tr></thead><tbody>${captureRows}</tbody></table></div>` : emptyState("Nenhum dado captado", "As leituras do sensor serão exibidas após o envio pela API.")}</section>`;
+    <section class="panel">${captures.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Captações recentes"><table><thead><tr><th>Data e hora</th><th>Sessão</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração Z</th></tr></thead><tbody>${captureRows}</tbody></table></div>` : emptyState("Nenhum dado captado", "As leituras do sensor serão exibidas assim que chegarem à plataforma.")}</section>`;
 }
 
 function renderSessions() {
@@ -422,10 +457,10 @@ function renderCaptures() {
   const selected = state.captureSessionFilter;
   const filtered = sortCaptures().filter((capture) => selected === "all" || String(capture.sessao?.id ?? capture.sessaoId) === String(selected));
   const options = `<option value="all">Todas as sessões</option>${state.sessions.map((session) => `<option value="${escapeHtml(session.id)}" ${String(session.id) === selected ? "selected" : ""}>Sessão #${escapeHtml(session.id)} · ${escapeHtml((session.atleta?.nome || athleteById(session.atletaId)?.nome) ?? "Atleta")}</option>`).join("")}`;
-  return `${sectionHeader("DADOS DO SENSOR", "Captações", "Leituras enviadas pela ESP32 e armazenadas pela API.", `<select class="select-input" id="capture-session-filter" aria-label="Filtrar por sessão">${options}</select>${button("refresh", "↻ Atualizar", "button ghost")}`)}
+  return `${sectionHeader("DADOS DO SENSOR", "Captações", "Leituras enviadas pelo sensor e registradas na plataforma.", `<select class="select-input" id="capture-session-filter" aria-label="Filtrar por sessão">${options}</select>${button("refresh", "↻ Atualizar", "button ghost")}`)}
     <div class="metrics-grid">${metricCard("Total de registros", filtered.length, "captações", selected === "all" ? "Todas as sessões" : `Sessão #${selected}`, "⌁")}${metricCard("Altura média", formatNumber(getAverageHeight(filtered)), "cm", "Estimativa de altura por tempo de voo", "∿")}${metricCard("Maior altura", formatNumber(getBestHeight(filtered)), "cm", "Melhor marca entre as captações", "↗")}${metricCard("Tempo de voo médio", formatNumber(filtered.length ? filtered.reduce((sum, capture) => sum + numeric(capture.tempoVooMs), 0) / filtered.length : 0, 0), "ms", "Duração média do voo", "◷")}</div>
-    <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Registros recebidos</h2><p class="panel-subtitle">Atualização automática a cada 15 segundos</p></div><span class="capture-badge"><i class="status-dot"></i>ESP32</span></div>
-      ${filtered.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Registros recebidos"><table><thead><tr><th>Data e hora</th><th>Atleta</th><th>Sessão</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração de pico Z</th></tr></thead><tbody>${filtered.map(renderCaptureRow).join("")}</tbody></table></div>` : emptyState("Nenhuma captação encontrada", selected === "all" ? "Quando a ESP32 enviar dados para /api/saltos, os registros aparecerão aqui." : "Não há captações associadas a esta sessão.")}
+    <section class="panel"><div class="panel-header"><div><h2 class="panel-title">Registros recebidos</h2><p class="panel-subtitle">Atualização automática a cada 15 segundos</p></div><span class="capture-badge"><i class="status-dot"></i>sensor</span></div>
+      ${filtered.length ? `<div class="table-wrap" tabindex="0" role="region" aria-label="Registros recebidos"><table><thead><tr><th>Data e hora</th><th>Atleta</th><th>Sessão</th><th>Tempo de voo</th><th>Altura estimada</th><th>Aceleração de pico Z</th></tr></thead><tbody>${filtered.map(renderCaptureRow).join("")}</tbody></table></div>` : emptyState("Nenhuma captação encontrada", selected === "all" ? "Quando o sensor enviar dados, os registros aparecerão aqui." : "Não há captações associadas a esta sessão.")}
     </section>`;
 }
 
@@ -457,7 +492,7 @@ function openAthleteForm(athlete = null) {
     <div class="field"><label for="athlete-birth">Data de nascimento</label><input id="athlete-birth" name="dataNascimento" type="date" required max="${localToday}" value="${escapeHtml(athlete?.dataNascimento || "")}"></div>
     <div class="field"><label for="athlete-weight">Peso (kg)</label><input id="athlete-weight" name="pesoKg" type="number" min="0.1" step="0.1" required value="${escapeHtml(athlete?.pesoKg ?? "")}"></div>
     <div class="field"><label for="athlete-height">Altura (cm)</label><input id="athlete-height" name="alturaCm" type="number" min="1" step="1" required value="${escapeHtml(athlete?.alturaCm ?? "")}"></div>`;
-  openModal(editing ? "Editar atleta" : "Novo atleta", "Os dados serão salvos diretamente na API Ápice.", fields, editing ? "Salvar alterações" : "Cadastrar atleta", async (form) => {
+  openModal(editing ? "Editar atleta" : "Novo atleta", "Os dados serão salvos diretamente no Ápice.", fields, editing ? "Salvar alterações" : "Cadastrar atleta", async (form) => {
     const data = {
       nome: String(form.get("nome")).trim(),
       dataNascimento: form.get("dataNascimento"),
@@ -497,7 +532,7 @@ function openSessionForm(session = null, athleteId = null) {
     <div class="field"><label for="session-start">Início</label><input id="session-start" name="dataHoraInicio" type="datetime-local" required value="${escapeHtml(toDateTimeLocal(session?.dataHoraInicio) || currentDateTimeLocal())}"></div>
     <div class="field"><label for="session-end">Fim (opcional)</label><input id="session-end" name="dataHoraFim" type="datetime-local" value="${escapeHtml(toDateTimeLocal(session?.dataHoraFim))}"></div>
     <div class="field full"><label for="session-notes">Observações</label><textarea id="session-notes" name="observacoes" maxlength="2000">${escapeHtml(session?.observacoes || "")}</textarea></div>`;
-  openModal(editing ? "Editar sessão" : "Nova sessão", "Vincule o treino ao atleta para associar as captações da ESP32.", fields, editing ? "Salvar alterações" : "Criar sessão", async (form) => {
+  openModal(editing ? "Editar sessão" : "Nova sessão", "Vincule o treino ao atleta para associar as captações do sensor.", fields, editing ? "Salvar alterações" : "Criar sessão", async (form) => {
     const data = {
       atletaId: Number(form.get("atletaId")),
       dataHoraInicio: form.get("dataHoraInicio"),
@@ -517,7 +552,7 @@ async function confirmDelete(kind, record) {
   const isAthlete = kind === "atleta";
   const title = isAthlete ? "Excluir atleta?" : "Excluir sessão?";
   const name = isAthlete ? record.nome : `sessão #${record.id}`;
-  const fields = `<div class="field full"><p class="page-description">Você está prestes a excluir <strong>${escapeHtml(name)}</strong>. Essa ação não pode ser desfeita.${isAthlete ? " Atletas com sessões vinculadas podem ser recusados pela API." : " Sessões com captações vinculadas podem ser recusadas pela API."}</p></div>`;
+  const fields = `<div class="field full"><p class="page-description">Você está prestes a excluir <strong>${escapeHtml(name)}</strong>. Essa ação não pode ser desfeita.${isAthlete ? " Atletas com sessões vinculadas podem ser recusados pelo sistema." : " Sessões com captações vinculadas podem ser recusadas pelo sistema."}</p></div>`;
   openModal(title, "Confirme antes de continuar.", fields, "Excluir", async () => {
     await apiRequest(`/api/${isAthlete ? "atletas" : "sessoes"}/${record.id}`, { method: "DELETE" });
     if (!isAthlete && state.view === "atleta") {
@@ -609,8 +644,11 @@ if (!state.authToken) {
     : `pages/${state.view === "atleta" ? "atleta" : state.view}.html${window.location.search}`;
   window.location.replace(`${loginPath}?returnTo=${encodeURIComponent(returnTo)}`);
 } else {
+  const finishLoading = showLoadingScreen();
   render();
-  loadData({ silent: true });
+  loadData({ silent: true }).catch(() => {
+    showNotice("Não foi possível carregar seus dados. Tente atualizar a página.");
+  }).finally(finishLoading);
   window.setInterval(() => {
     if (!document.hidden) loadData({ silent: true });
   }, POLL_INTERVAL_MS);
